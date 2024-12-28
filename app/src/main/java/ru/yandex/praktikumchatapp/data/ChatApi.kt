@@ -1,6 +1,10 @@
 package ru.yandex.praktikumchatapp.data
 
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.isActive
 import kotlin.random.Random
 
 class ChatApi {
@@ -82,11 +86,13 @@ class ChatApi {
         "Расслабься!"
     )
 
-    suspend fun getReply(): String {
-        delay(Random.nextLong(MAXIMUM_RESPONSE_DELAY))
+    fun getReply(): Flow<String> = flow {
+        while (currentCoroutineContext().isActive) {
+            delay(Random.nextLong(MAXIMUM_RESPONSE_DELAY))
 //        if (Random.nextBoolean()) {
 //            throw Exception("Ошибка запроса", Throwable("Something went wrong"))
 //        }
-        return responses.random()
+            emit(responses.random())
+        }
     }
 }
