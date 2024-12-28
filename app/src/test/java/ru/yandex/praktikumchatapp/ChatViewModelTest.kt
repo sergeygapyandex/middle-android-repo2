@@ -9,6 +9,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import ru.yandex.praktikumchatapp.presentation.ChatViewModel
+import ru.yandex.praktikumchatapp.presentation.Message
 
 @ExperimentalCoroutinesApi
 class ChatViewModelTest {
@@ -30,11 +31,13 @@ class ChatViewModelTest {
 
     @Test
     fun `send message should update messages with MyMessage`() = runTest {
+        val message = Message.MyMessage("TestMessage")
 
     }
 
     @Test
     fun testReceiveMessage_concurrentMessages() = runTest {
+        val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
 
     }
 }
