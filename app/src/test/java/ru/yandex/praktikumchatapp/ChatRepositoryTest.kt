@@ -1,7 +1,9 @@
 package ru.yandex.praktikumchatapp
 
+import app.cash.turbine.test
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -43,16 +45,23 @@ class ChatRepositoryTest {
     @Test
     fun `getReplyMessage should retry on error then successfully return string`() = runTest {
         val replyText = "Hello"
+        var isException = true
 
         `when`(chatApi.getReply())
-            .thenThrow(RuntimeException("test"))
-            .thenReturn(replyText)
+            .thenReturn(
+                flow {
+                    if(isException) {
+                        isException = false
+                        throw Exception("test exception")
+                    }
+                    emit(replyText)
+                }
+            )
 
-        val repoReply = chatRepository.getReplyMessage()
-
-        verify(chatApi, times(2)).getReply()
-
-        assert(repoReply == replyText)
+        chatRepository.getReplyMessage().test {
+            assert(awaitItem() == replyText)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
 }
