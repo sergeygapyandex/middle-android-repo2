@@ -77,10 +77,6 @@ suspend fun sendMyMessage(text: String) {
 ```Kotlin
 const val MESSAGE_SUPPORTED_VERSION = 1
 ```
-3. Теперь нужно добавить логику отображения в `MainActivity`. Для каждой из карточек сообщений для параметра `text`
-   напишите `if` для проверки версии. Если версия сообщения больше, чем максимально поддерживаемая версия, то отобразите
-   сообщение-заглушку из `R.string.unsupported_message`. Для проверки реализации, можете выставить `version > 1` для
-   `OtherMessage`
 
 
 ### Задание 5
