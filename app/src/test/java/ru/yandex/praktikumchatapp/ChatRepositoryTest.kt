@@ -50,7 +50,7 @@ class ChatRepositoryTest {
         `when`(chatApi.getReply())
             .thenReturn(
                 flow {
-                    if(isException) {
+                    if (isException) {
                         isException = false
                         throw Exception("test exception")
                     }
@@ -63,5 +63,4 @@ class ChatRepositoryTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
-
 }
