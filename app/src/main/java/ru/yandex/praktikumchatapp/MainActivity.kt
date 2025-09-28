@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ChatScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val viewModel = remember { ChatViewModel() }
     val messagesList = viewModel.messages.observeAsState(emptyList())

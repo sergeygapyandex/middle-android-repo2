@@ -8,7 +8,7 @@ import kotlinx.coroutines.launch
 import ru.yandex.praktikumchatapp.data.ChatRepository
 
 class ChatViewModel(
-    val isWithReplies: Boolean = true
+    val isWithReplies: Boolean = true,
 ) : ViewModel() {
 
     private val repository = ChatRepository()
@@ -22,8 +22,7 @@ class ChatViewModel(
                 repository.getReplyMessage().collect { response ->
 
                     val currentMessages = _messages.value ?: emptyList()
-                    _messages.value =
-                        currentMessages + Message.OtherMessage(response)
+                    _messages.value = currentMessages + Message.OtherMessage(response)
 
                 }
             }
