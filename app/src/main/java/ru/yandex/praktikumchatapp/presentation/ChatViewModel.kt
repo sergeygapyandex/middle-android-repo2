@@ -2,6 +2,8 @@ package ru.yandex.praktikumchatapp.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -9,7 +11,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.yandex.praktikumchatapp.data.ChatRepository
-import kotlin.math.pow
 
 @Suppress("SwallowedException", "TooGenericExceptionCaught")
 class ChatViewModel(
@@ -22,20 +23,17 @@ class ChatViewModel(
     val messages = _messages.asStateFlow()
 
     private var consecutiveFailures = 0
+    private val handler = CoroutineExceptionHandler { _, throwable ->
+        println("Ошибка в корутине: $throwable")
+    }
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(handler) {
             while (isWithReplies) {
                 try {
                     repository.getReplyMessage()
                         .catch { exception ->
                             consecutiveFailures++
-                            val multiplier = 2.0.pow((consecutiveFailures - 1).toDouble()).toLong()
-                            val backoffDelay = minOf(
-                                INITIAL_BACKOFF * multiplier,
-                                MAX_BACKOFF
-                            )
-                            delay(backoffDelay)
                         }
                         .collect { response ->
                             consecutiveFailures = 0
@@ -44,6 +42,7 @@ class ChatViewModel(
                             }
                         }
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     consecutiveFailures++
                     delay(FALLBACK_DELAY)
                 }
@@ -58,8 +57,6 @@ class ChatViewModel(
     }
 
     private companion object {
-        const val INITIAL_BACKOFF = 2000L
-        const val MAX_BACKOFF = 30000L
         const val FALLBACK_DELAY = 10000L
     }
 }
