@@ -2,12 +2,15 @@ package ru.yandex.praktikumchatapp.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.yandex.praktikumchatapp.data.ChatRepository
 
+@Suppress("SwallowedException", "TooGenericExceptionCaught")
 class ChatViewModel(
     val isWithReplies: Boolean = true,
 ) : ViewModel() {
@@ -20,10 +23,18 @@ class ChatViewModel(
     init {
         viewModelScope.launch {
             while (isWithReplies) {
-                repository.getReplyMessage().collect { response ->
-                    _messages.update { oldValue ->
-                        oldValue + Message.OtherMessage(response)
-                    }
+                try {
+                    repository.getReplyMessage()
+                        .catch { exception ->
+                            println("${exception.message}")
+                        }
+                        .collect { response ->
+                            _messages.update { oldValue ->
+                                oldValue + Message.OtherMessage(response)
+                            }
+                        }
+                } catch (e: Exception) {
+                    delay(DELAY)
                 }
             }
         }
@@ -33,5 +44,9 @@ class ChatViewModel(
         _messages.update { oldMessages ->
             oldMessages + Message.MyMessage(messageText)
         }
+    }
+
+    private companion object {
+        const val DELAY = 5000L
     }
 }
