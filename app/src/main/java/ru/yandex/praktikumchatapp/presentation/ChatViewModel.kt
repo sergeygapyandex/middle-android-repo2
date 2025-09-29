@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.yandex.praktikumchatapp.data.ChatRepository
+import kotlin.math.pow
 
 @Suppress("SwallowedException", "TooGenericExceptionCaught")
 class ChatViewModel(
@@ -20,21 +21,31 @@ class ChatViewModel(
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages = _messages.asStateFlow()
 
+    private var consecutiveFailures = 0
+
     init {
         viewModelScope.launch {
             while (isWithReplies) {
                 try {
                     repository.getReplyMessage()
                         .catch { exception ->
-                            println("${exception.message}")
+                            consecutiveFailures++
+                            val multiplier = 2.0.pow((consecutiveFailures - 1).toDouble()).toLong()
+                            val backoffDelay = minOf(
+                                INITIAL_BACKOFF * multiplier,
+                                MAX_BACKOFF
+                            )
+                            delay(backoffDelay)
                         }
                         .collect { response ->
+                            consecutiveFailures = 0
                             _messages.update { oldValue ->
                                 oldValue + Message.OtherMessage(response)
                             }
                         }
                 } catch (e: Exception) {
-                    delay(DELAY)
+                    consecutiveFailures++
+                    delay(FALLBACK_DELAY)
                 }
             }
         }
@@ -47,6 +58,8 @@ class ChatViewModel(
     }
 
     private companion object {
-        const val DELAY = 5000L
+        const val INITIAL_BACKOFF = 2000L
+        const val MAX_BACKOFF = 30000L
+        const val FALLBACK_DELAY = 10000L
     }
 }
