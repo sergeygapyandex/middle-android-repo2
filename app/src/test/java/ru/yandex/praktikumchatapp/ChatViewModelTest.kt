@@ -1,5 +1,8 @@
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -45,6 +48,14 @@ class ChatViewModelTest {
     @Test
     fun testReceiveMessage_concurrentMessages() = runTest {
         val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
-
+        coroutineScope {
+            val jobs = messagesToSend.map { message ->
+                launch { viewModel.sendMyMessage(message.text) }
+            }
+            jobs.joinAll()
+            val listMessage = viewModel.messages.value
+            assert(listMessage.size == 100) { "Значений должно быть 100" }
+            assert(listMessage.contains(messagesToSend[81]))
+        }
     }
 }
