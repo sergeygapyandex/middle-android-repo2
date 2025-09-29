@@ -31,8 +31,15 @@ class ChatViewModelTest {
 
     @Test
     fun `send message should update messages with MyMessage`() = runTest {
-        val message = Message.MyMessage("TestMessage")
-
+        assert(viewModel.messages.value.isEmpty()) { "Начальный список должен быть пустой" }
+        val message = Message.MyMessage("MyTestMessage")
+        viewModel.sendMyMessage(message.text)
+        val listMessage = viewModel.messages.value
+        assert(listMessage.isNotEmpty()) { "Flow не заполнился" }
+        assert(listMessage.size == 1) { "Размер списка должен быть 1" }
+        assert(listMessage.contains(message)) { "Значение неправильное" }
+        assert(listMessage.last() is Message.MyMessage) { "Последнее значение должно быть типа MyMessage" }
+        assert((listMessage.last() as Message.MyMessage).text == "MyTestMessage") { "Текст не совпадает" }
     }
 
     @Test
